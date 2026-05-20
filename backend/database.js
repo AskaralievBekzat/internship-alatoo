@@ -8,46 +8,48 @@ function initDatabase() {
     db.serialize(() => {
         // Users table
         db.run(`CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      name TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'student',
-      club_id INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            name TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'student',
+            club_id INTEGER,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
 
-        // Clubs table
+        // Clubs table with instagram columns
         db.run(`CREATE TABLE IF NOT EXISTS clubs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      description TEXT,
-      image_url TEXT,
-      admin_id INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            image_url TEXT,
+            instagram TEXT,
+            instagram_url TEXT,
+            admin_id INTEGER,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
 
         // Applications table
         db.run(`CREATE TABLE IF NOT EXISTS applications (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      club_id INTEGER NOT NULL,
-      answers TEXT NOT NULL,
-      status TEXT DEFAULT 'pending',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id),
-      FOREIGN KEY (club_id) REFERENCES clubs(id)
-    )`);
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            club_id INTEGER NOT NULL,
+            answers TEXT NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (club_id) REFERENCES clubs(id)
+        )`);
 
         // Announcements table
         db.run(`CREATE TABLE IF NOT EXISTS announcements (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      club_id INTEGER NOT NULL,
-      title TEXT NOT NULL,
-      content TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (club_id) REFERENCES clubs(id)
-    )`);
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            club_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (club_id) REFERENCES clubs(id)
+        )`);
 
         // Seed demo data
         seedData();
@@ -61,88 +63,102 @@ function seedData() {
         console.log('🌱 Seeding demo data...');
         const hash = bcrypt.hashSync('admin123', 10);
 
-        // Insert clubs
+        // Clubs data
         const clubs = [
             {
-                name: 'Dance Club',
-                description: 'Клуб студентов "Dance" - это увлеченное сообщество студентов, занимающихся современными танцевальными направлениями, такими как hip-hop, contemporary, k-pop и другие. Мы проводим регулярные тренировки, участвуем в университетских мероприятиях и городских конкурсах.',
-                image_url: 'images/IMG_6954.PNG',
+                name: 'Ala-Too Dance',
+                description: 'Клуб народных танцев — это пространство, где студенты изучают традиционные танцы, развивают сценические навыки и знакомятся с культурным наследием разных народов.',
+                instagram: '@alatoo.dance',
+                instagram_url: 'https://www.instagram.com/alatoo.dance/',
+                image_url: '/uploads/dance.jpg',
             },
             {
-                name: 'Financial Club',
-                description: 'Мы стремимся развивать профессиональные навыки студентов, предоставляя возможность участвовать в семинарах, встречах с успешными брокерами и практических мероприятиях. Изучаем фондовые рынки, инвестиции и финансовое планирование.',
-                image_url: 'images/IMG_6955.PNG',
+                name: 'FinClub',
+                description: 'Финансовый клуб — это студенческое объединение, которое организует интеллектуальные и образовательные мероприятия в сфере финансов и экономики. Проводим игры "Брейн Ринг", "Брейн Олимп", семинары и встречи с представителями компаний.',
+                instagram: '@fin_club_alatoo',
+                instagram_url: 'https://www.instagram.com/fin_club_alatoo/',
+                image_url: '/uploads/finclub.jpg',
             },
             {
-                name: 'International Relations Club',
-                description: 'Клуб объединяет студентов международных отношений, обеспечивающий платформу для обсуждения актуальных вопросов в области международной дипломатии и глобальной политики. Организуем модели ООН, дебаты и встречи с дипломатами.',
-                image_url: 'images/IMG_6991.PNG',
+                name: 'IR Club',
+                description: 'IR Club (International relations club) - студенческий клуб отделения международных отношений, обеспечивающий платформу для дополнительного развития в области международной дипломатии и глобальной политики.',
+                instagram: '@irclub.aiu',
+                instagram_url: 'https://www.instagram.com/irclub.aiu/',
+                image_url: '/uploads/irclub.jpg',
             },
             {
                 name: 'Music Club',
-                description: 'Возможность талантливым музыкантам Ала-Тоо. Участники могут продолжать обучаться игре на инструментах, показать свои таланты на мероприятиях внутри и вне университета. Проводим концерты и jam-сессии.',
-                image_url: 'images/IMG_6992.PNG',
+                description: 'Music club - комьюнити талантливых музыкантов МУА. Участники имеют возможность обучиться игре на инструментах, показать свои таланты на мероприятиях. Объединяем любителей музыки всех уровней и направлений.',
+                instagram: '@musicclub_alatoo',
+                instagram_url: 'https://www.instagram.com/musicclub_alatoo/',
+                image_url: '/uploads/musicclub.jpg',
             },
             {
                 name: 'Book Club',
-                description: 'Ala-Too Book Club – это сообщество для всех, кто увлечен чтением. Наша главная цель – создать пространство, где любители книг могут встречаться, обсуждать прочитанное и вдохновлять друг друга на новые литературные открытия.',
-                image_url: 'images/book1.jpg',
+                description: 'BOOK CLUB - сообщество для всех, кто увлечен чтением. Создаём пространство, где любители книг встречаются, обсуждают прочитанное и вдохновляют друг друга. Популяризируем культуру чтения среди студентов.',
+                instagram: '@alatoo.library',
+                instagram_url: 'https://www.instagram.com/alatoo.library/',
+                image_url: '/uploads/bookclub.jpg',
             },
         ];
 
-        const adminEmails = [
-            'admin.chess@alatoo.edu.kg',
-            'admin.it@alatoo.edu.kg',
-            'admin.photo@alatoo.edu.kg',
+        // Admins data
+        const admins = [
+            { email: 'admin.dance@alatoo.edu.kg', password: 'admin123', name: 'Азема Токтосунова', club: 'Ala-Too Dance', desc: 'Клуб народных танцев' },
+            { email: 'admin.fin@alatoo.edu.kg', password: 'admin123', name: 'Cолтонбекова Сайкал', club: 'FinClub', desc: 'Финансовый клуб' },
+            { email: 'admin.ir@alatoo.edu.kg', password: 'admin123', name: 'Сайкал Сакмаматова', club: 'IR Club', desc: 'Клуб международных отношений' },
+            { email: 'admin.music@alatoo.edu.kg', password: 'admin123', name: 'Айгерим Бекибаева', club: 'Music Club', desc: 'Музыкальный клуб' },
+            { email: 'admin.book@alatoo.edu.kg', password: 'admin123', name: 'Айжамал Шаршенбекова', club: 'Book Club', desc: 'Книжный клуб' },
         ];
-        const adminNames = ['Chess Admin', 'IT Admin', 'Photo Admin'];
 
-        // Insert clubs first, then create admins linked to first 3 clubs
         let clubIds = [];
         let inserted = 0;
 
+        // Insert clubs
         clubs.forEach((club, i) => {
             db.run(
-                'INSERT INTO clubs (name, description, image_url) VALUES (?, ?, ?)',
-                [club.name, club.description, club.image_url],
+                `INSERT INTO clubs (name, description, image_url, instagram, instagram_url) 
+                 VALUES (?, ?, ?, ?, ?)`,
+                [club.name, club.description, club.image_url, club.instagram, club.instagram_url],
                 function (err) {
-                    if (err) return;
+                    if (err) {
+                        console.error('Error inserting club:', err.message);
+                        return;
+                    }
                     clubIds[i] = this.lastID;
                     inserted++;
 
                     // After all clubs are inserted
                     if (inserted === clubs.length) {
-                        // Create 3 admin accounts linked to first 3 clubs
-                        for (let j = 0; j < 3; j++) {
-                            const cid = clubIds[j];
+                        // Create admin accounts for all clubs
+                        admins.forEach((admin, idx) => {
+                            const cid = clubIds[idx];
+                            if (!cid) {
+                                console.error(`Club ID not found for ${admin.email}`);
+                                return;
+                            }
+                            const adminHash = bcrypt.hashSync(admin.password, 10);
                             db.run(
                                 'INSERT INTO users (email, password_hash, name, role, club_id) VALUES (?, ?, ?, ?, ?)',
-                                [adminEmails[j], hash, adminNames[j], 'admin', cid],
+                                [admin.email, adminHash, admin.name, 'admin', cid],
                                 function (err2) {
-                                    if (err2) return;
+                                    if (err2) {
+                                        console.error('Error inserting admin:', err2.message);
+                                        return;
+                                    }
                                     // Link admin to club
                                     db.run('UPDATE clubs SET admin_id = ? WHERE id = ?', [this.lastID, cid]);
                                 }
                             );
-                        }
-
-                        // Demo announcements
-                        const announcements = [
-                            [clubIds[0], 'Welcome to Dance Club!', 'Our first meeting is this Friday at 5 PM in the sports hall. All styles welcome!'],
-                            [clubIds[0], 'K-Pop Workshop', 'Special K-Pop dance workshop next Saturday. Register by Thursday!'],
-                            [clubIds[1], 'Investment Seminar', 'Guest speaker from Halyk Bank joining us this Wednesday to discuss stock markets.'],
-                            [clubIds[2], 'MUN Conference', 'Ala-Too MUN 2024 registration is now open. Deadline: November 30.'],
-                            [clubIds[3], 'Open Mic Night', 'Monthly open mic night on the last Friday of the month. Sign up to perform!'],
-                            [clubIds[4], 'November Reading', 'This month we\'re reading "The Kite Runner". Discussion on November 28.'],
-                        ];
-                        announcements.forEach(([cid, title, content]) => {
-                            db.run('INSERT INTO announcements (club_id, title, content) VALUES (?, ?, ?)', [cid, title, content]);
                         });
 
+                        // No default announcements — admins will add them later
                         console.log('✅ Demo data seeded!');
-                        console.log('   Admins: admin.chess@alatoo.edu.kg / admin123');
-                        console.log('           admin.it@alatoo.edu.kg / admin123');
-                        console.log('           admin.photo@alatoo.edu.kg / admin123');
+                        console.log('   Clubs: Ala-Too Dance, FinClub, IR Club, Music Club, Book Club');
+                        console.log('   Admins (password: admin123):');
+                        admins.forEach(a => console.log(`     ${a.email}`));
+                        console.log('');
+                        console.log('   Students can register with @alatoo.edu.kg email');
                     }
                 }
             );

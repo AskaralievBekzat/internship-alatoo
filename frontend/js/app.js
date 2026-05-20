@@ -123,8 +123,7 @@ function renderClubs(clubs) {
     }
     grid.innerHTML = clubs.map((c, idx) => {
         let imgStyle = '';
-        if (idx === 0) imgStyle = 'object-position: center -120px;';
-        if (idx === 1) imgStyle = 'object-position: center -10px;';
+
         return `<div class="club-card" onclick="openClub(${c.id})">
             <img class="club-image" src="${c.image_url || ''}" alt="${escapeHtml(c.name)}"
                  style="${imgStyle}"
@@ -159,7 +158,7 @@ async function openClub(clubId) {
     try {
         const [club, anns] = await Promise.all([
             http('GET', '/clubs/' + clubId),
-            http('GET', '/announcements/' + clubId),
+            http('GET', '/clubs/announcements/' + clubId),
         ]);
         const isStudent = currentUser?.role === 'student';
         const applyBtn = isStudent
@@ -309,7 +308,7 @@ async function postAnnouncement() {
     const content = document.getElementById('annContent')?.value.trim();
     if (!title || !content) { toast('Please fill in both fields', 'error'); return; }
     try {
-        await http('POST', '/announcements', { title, content });
+        await http('POST', '/clubs/announcements', { title, content });
         document.getElementById('annTitle').value = '';
         document.getElementById('annContent').value = '';
         toast('Announcement posted!', 'success');
@@ -322,7 +321,7 @@ async function loadAdminAnns() {
     if (!el) return;
     el.innerHTML = '<div class="spinner"></div>';
     try {
-        const anns = await http('GET', '/announcements/' + currentUser.clubId);
+        const anns = await http('GET', '/clubs/announcements/' + currentUser.clubId);
         if (!anns.length) { el.innerHTML = '<p style="color:var(--muted)">No announcements yet.</p>'; return; }
         el.innerHTML = anns.map(a => `<div class="ann-card"><div class="ann-card-actions" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem"><div style="flex:1"><h4>${escapeHtml(a.title)}</h4><p>${escapeHtml(a.content)}</p><div class="ann-meta">${formatDate(a.created_at)}</div></div><button class="btn btn-danger btn-sm" onclick="deleteAnn(${a.id})"><i class="fas fa-trash"></i></button></div></div>`).join('');
     } catch (e) { toast(e.message, 'error'); }
@@ -330,7 +329,7 @@ async function loadAdminAnns() {
 
 async function deleteAnn(id) {
     try {
-        await http('DELETE', '/announcements/' + id);
+        await http('DELETE', '/clubs/announcements/' + id);
         toast('Announcement deleted', 'info');
         loadAdminAnns();
     } catch (e) { toast(e.message, 'error'); }
