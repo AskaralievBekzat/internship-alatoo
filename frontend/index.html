@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <title>UNICLUB</title>
+</head>
+<body>
+
+<div id="authModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeAuthModal()">&times;</span>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showAuthTab('login')">Вход</button>
+            <button class="tab-btn" onclick="showAuthTab('register')">Регистрация</button>
+        </div>
+        <div id="loginForm">
+            <input type="email" id="loginEmail" placeholder="student@alatoo.edu.kg">
+            <input type="password" id="loginPassword" placeholder="Пароль">
+            <button onclick="login()">Войти</button>
+        </div>
+        <div id="registerForm" style="display:none">
+            <input type="text" id="regName" placeholder="ФИО">
+            <input type="email" id="regEmail" placeholder="student@alatoo.edu.kg">
+            <input type="password" id="regPassword" placeholder="Пароль">
+            <button onclick="register()">Зарегистрироваться</button>
+            <p class="hint">Только @alatoo.edu.kg</p>
+        </div>
+    </div>
+</div>
+
+<nav class="navbar">
+    <div class="navbar-logo">
+        <img src="/images/ALA-TOO_logo.png" class="logo-image">
+        <img src="/images/IMG_6953.PNG" class="logo-image">
+        <span>UNICLUB</span>
+    </div>
+    <div class="burger" id="burger"><i class="fas fa-bars"></i></div>
+    <div class="nav-links" id="navLinks">
+        <a href="#" onclick="showHome()">HOME</a>
+        <a href="#" id="myAppsLink" style="display:none" onclick="showMyApps()">Мои заявки</a>
+        <a href="#" id="adminLink" style="display:none" onclick="showAdminPanel()">Управление</a>
+        <a href="#" id="loginLink" onclick="openAuthModal()">Войти</a>
+        <a href="#" id="logoutLink" style="display:none" onclick="logout()">Выйти</a>
+    </div>
+</nav>
+
+<div class="hero hero-bg">
+    <div class="hero-content">
+        <h1>UNICLUB</h1>
+        <div class="search-container">
+            <input type="text" class="search-bar" id="searchInput" placeholder="Поиск...">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+    </div>
+</div>
+
+<div id="homeView" class="club-grid"></div>
+<div id="detailView" class="detail-container" style="display:none"></div>
+<div id="appsView" class="apps-container" style="display:none"></div>
+<div id="adminView" class="admin-container" style="display:none"></div>
+<div id="toast" class="toast"></div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/main.js"></script>
+</body>
+</html>
