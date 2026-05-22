@@ -161,18 +161,35 @@ async function openClub(clubId) {
             http('GET', '/clubs/announcements/' + clubId),
         ]);
         const isStudent = currentUser?.role === 'student';
+
+        // Добавляем Instagram блок
+        const instaHtml = club.instagram_url ? `
+            <div style="margin: 15px 0;">
+                <a href="${club.instagram_url}" target="_blank" style="color: var(--primary-color); text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fab fa-instagram" style="font-size: 1.2rem;"></i> 
+                    <span>${escapeHtml(club.instagram || 'Instagram')}</span>
+                </a>
+            </div>
+        ` : '';
+
         const applyBtn = isStudent
             ? `<button class="btn btn-primary" onclick="openApplyModal(${club.id}, '${escapeHtml(club.name).replace(/'/g, "\\'")}')"><i class="fas fa-paper-plane"></i> Apply to Join</button>`
             : (!currentUser ? `<button class="btn btn-outline" onclick="openAuthModal()">Login to Apply</button>` : '');
+
         const annHtml = anns?.length ? anns.map(a => `<div class="ann-card"><h4>${escapeHtml(a.title)}</h4><p>${escapeHtml(a.content)}</p><div class="ann-meta">${formatDate(a.created_at)}</div></div>`).join('') : '<p style="color:var(--muted)">No announcements yet.</p>';
+
         el.innerHTML = `
             <button class="back-btn" onclick="showView('home')"><i class="fas fa-arrow-left"></i> Back to Clubs</button>
             <div class="club-detail-hero"><img src="${club.image_url || ''}" alt="${escapeHtml(club.name)}" onerror="this.src='';this.parentElement.style.background='linear-gradient(135deg,#B22234,#C8A165)'"><div class="club-detail-hero-overlay"><div class="club-detail-hero-title">${escapeHtml(club.name)}</div></div></div>
             <p style="color:var(--muted);margin-bottom:1.5rem;line-height:1.7">${escapeHtml(club.description || '')}</p>
+            ${instaHtml}
             ${applyBtn}
             <h3 style="margin-top:2rem"><i class="fas fa-bullhorn"></i> Announcements</h3>
             ${annHtml}`;
-    } catch (e) { el.innerHTML = '<p style="color:#c0392b">Failed to load club details.</p>'; }
+    } catch (e) {
+        console.error(e);
+        el.innerHTML = '<p style="color:#c0392b">Failed to load club details.</p>';
+    }
 }
 
 function openApplyModal(clubId, clubName) {

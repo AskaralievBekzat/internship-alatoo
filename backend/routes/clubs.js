@@ -39,14 +39,19 @@ router.get('/announcements/:clubId', (req, res) => {
 // GET /api/announcements/all — все объявления для блога
 router.get('/announcements/all', (req, res) => {
     console.log('📢 Эндпоинт /announcements/all вызван');
-    db.all('SELECT * FROM announcements', [], (err, rows) => {
-        if (err) {
-            console.error('Ошибка:', err);
-            return res.status(500).json({ error: err.message });
+    db.all(
+        'SELECT * FROM announcements',
+        [],
+        (err, rows) => {
+            if (err) {
+                console.error('Ошибка:', err);
+                return res.status(500).json({ error: err.message });
+            }
+            console.log(`✅ Найдено ${rows.length} объявлений`);
+            console.log('Данные:', rows);
+            res.json(rows);
         }
-        console.log(`✅ Найдено ${rows.length} объявлений`);
-        res.json(rows);
-    });
+    );
 });
 // POST /api/announcements (admin only)
 router.post('/announcements', authMiddleware, adminMiddleware, (req, res) => {
