@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/uniclub-logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <title>UNICLUB - University Clubs Platform</title>
+</head>
+<body>
+
+<!-- ─ Navbar ──────────────────────────────────────────────────── -->
+<nav class="navbar">
+    <div class="navbar-logo" onclick="showView('home')">
+        <img src="images/ALA-TOO_logo.png" class="logo-image" onerror="this.style.display='none'">
+        <img src="images/IMG_6953.PNG" class="logo-image" onerror="this.style.display='none'">
+        <span>UNICLUB</span>
+    </div>
+    <div class="burger" id="burger"><i class="fas fa-bars"></i></div>
+    <div class="nav-links" id="navLinks">
+        <a onclick="showView('home')">HOME</a>
+        <a onclick="showView('blog')">BLOG</a>
+        <a id="nav-myapps" class="hidden" onclick="showView('myapps')">MY APPLICATIONS</a>
+        <a id="nav-admin" class="hidden" onclick="showView('admin')">ADMIN PANEL</a>
+        <a id="nav-profile" class="hidden" onclick="showView('profile')">PROFILE</a>
+        <a id="nav-login" onclick="openAuthModal()">LOGIN</a>
+        <a id="nav-logout" class="hidden" onclick="doLogout()">LOGOUT</a>
+        <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+            <i class="fas fa-moon" id="theme-icon"></i>
+        </button>
+    </div>
+</nav>
+
+<!-- ─ Toast container ────────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  VIEW: HOME                                                 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="view-home" class="view active">
+    <div class="hero hero-bg">
+        <div class="hero-content">
+            <h1>UNICLUB</h1>
+            <div class="search-container">
+                <input type="text" class="search-bar" id="searchBar" placeholder="Search clubs...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="club-grid" id="clubGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:3rem">
+            <div class="spinner"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  VIEW: CLUB DETAIL                                          -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="view-club" class="view">
+    <div class="section" id="clubDetail"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  VIEW: MY APPLICATIONS                                      -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="view-myapps" class="view">
+    <div class="section">
+        <h2><i class="fas fa-clipboard-list"></i> My Applications</h2>
+        <div id="myAppsList"></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  VIEW: BLOG / ANNOUNCEMENTS                                 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="view-blog" class="view">
+    <div class="section">
+        <h2><i class="fas fa-bullhorn"></i> Blog & Announcements</h2>
+        <div class="filter-bar" id="blogFilter">
+            <button class="filter-btn active" data-club="all" onclick="filterBlog(this, 'all')">All Clubs</button>
+        </div>
+        <div id="blogList"></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  VIEW: ADMIN PANEL                                          -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="view-admin" class="view">
+    <div class="section">
+        <h2><i class="fas fa-cogs"></i> Admin Panel — <span id="adminClubName"></span></h2>
+        <div class="filter-bar" style="margin-bottom:2rem">
+            <button class="filter-btn active" onclick="switchAdminTab('applications', this)">Applications</button>
+            <button class="filter-btn" onclick="switchAdminTab('announcements', this)">Announcements</button>
+        </div>
+        <div id="admin-tab-applications">
+            <h3>Club Applications</h3>
+            <div id="adminAppsList"></div>
+        </div>
+        <div id="admin-tab-announcements" style="display:none">
+            <h3>Post New Announcement</h3>
+            <div class="form-group">
+                <label>Title</label>
+                <input class="form-control" id="annTitle" placeholder="Announcement title">
+            </div>
+            <div class="form-group">
+                <label>Content</label>
+                <textarea class="form-control" id="annContent" rows="4" placeholder="Write your announcement..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="postAnnouncement()">
+                <i class="fas fa-paper-plane"></i> Post Announcement
+            </button>
+            <h3 style="margin-top:2rem">Posted Announcements</h3>
+            <div id="adminAnnList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  VIEW: PROFILE                                              -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="view-profile" class="view">
+    <div class="section">
+        <h2><i class="fas fa-user"></i> Profile</h2>
+        <div id="profileContent"></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  MODAL: AUTH                                                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="authModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
+        <h2>Welcome to UniClub</h2>
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="loginTab" onclick="switchAuthTab('login')">Login</button>
+            <button class="auth-tab" id="registerTab" onclick="switchAuthTab('register')">Register</button>
+        </div>
+        <div id="loginForm">
+            <div class="form-group">
+                <label>Email</label>
+                <input class="form-control" type="email" id="loginEmail" placeholder="you@alatoo.edu.kg">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input class="form-control" type="password" id="loginPass" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="doLogin()">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            <p style="margin-top:1rem;font-size:0.82rem;color:var(--muted);text-align:center">
+                Demo admins: admin.chess / admin.it / admin.photo @alatoo.edu.kg — password: admin123
+            </p>
+        </div>
+        <div id="registerForm" style="display:none">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input class="form-control" id="regName" placeholder="Your full name">
+            </div>
+            <div class="form-group">
+                <label>Email (@alatoo.edu.kg only)</label>
+                <input class="form-control" type="email" id="regEmail" placeholder="yourname@alatoo.edu.kg">
+            </div>
+            <div class="form-group">
+                <label>Password (min 6 chars)</label>
+                <input class="form-control" type="password" id="regPass" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="doRegister()">
+                <i class="fas fa-user-plus"></i> Create Account
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  MODAL: APPLY TO CLUB                                       -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="applyModal">
+    <div class="modal" style="max-width:540px">
+        <button class="modal-close" onclick="closeApplyModal()"><i class="fas fa-times"></i></button>
+        <h2>Apply to <span id="applyClubName"></span></h2>
+        <input type="hidden" id="applyClubId">
+        <div class="form-group">
+            <label>Full Name</label>
+            <input class="form-control" id="applyFullName" placeholder="Your full name">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Group / Year</label>
+                <input class="form-control" id="applyGroup" placeholder="e.g. CS-21-1, 2nd year">
+            </div>
+            <div class="form-group">
+                <label>Phone (optional)</label>
+                <input class="form-control" id="applyPhone" placeholder="+996 ...">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Why do you want to join?</label>
+            <textarea class="form-control" id="applyWhy" rows="3" placeholder="Tell us about your motivation..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Your skills & hobbies</label>
+            <textarea class="form-control" id="applySkills" rows="3" placeholder="Relevant skills, experience, interests..."></textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="submitApplication()">
+            <i class="fas fa-paper-plane"></i> Submit Application
+        </button>
+    </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/theme.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
