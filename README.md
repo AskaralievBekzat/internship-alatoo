@@ -55,7 +55,7 @@ The platform also includes an AI-powered recommendation system that suggests sui
 - Project Manager - Berdibekova Zhasmina EEAIR24
 - Frontend Developer - Abdybekova Azema COMFCI24
 - Backend Developer - Toktosunova Azema COMSE24
-- DevOps Engineer - ASKARALIEV BEKZAT COMSEH24
+- DevOps Engineer - Askaraliev Bekzat COMSEH24
 - AI Engineer - Nour Mahmoud Mohamed Mohamed Beshir EEAIR24
 
 ---
