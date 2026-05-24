@@ -1,0 +1,10 @@
+node_modules
+backend/node_modules
+backend/university.db
+backend/uploads
+.env
+.git
+.gitignore
+.idea
+*.md
+.DS_Store
