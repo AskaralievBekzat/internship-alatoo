@@ -418,7 +418,7 @@ async function doAIRecommend() {
     resultsEl.innerHTML = '<div class="spinner"></div>';
 
     try {
-        const data = await http('POST', '/ai/recommend', { interests });
+        const data = await http('POST', '/clubs/ai/recommend', { interests });
         const recs = data.recommendations;
 
         if (!recs || !recs.length) {
