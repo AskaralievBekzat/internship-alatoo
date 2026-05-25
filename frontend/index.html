@@ -47,6 +47,11 @@
                 <input type="text" class="search-bar" id="searchBar" placeholder="Search clubs...">
                 <i class="fas fa-search search-icon"></i>
             </div>
+            <div style="text-align:center;padding:1rem 0 0;position:relative;z-index:2">
+                <button class="btn btn-primary" onclick="openAIModal()" style="font-size:1rem;padding:0.75rem 2rem">
+                    <i class="fas fa-magic"></i> Find My Perfect Club with AI
+                </button>
+            </div>
         </div>
     </div>
     <div class="club-grid" id="clubGrid">
@@ -213,9 +218,27 @@
         </button>
     </div>
 </div>
-
+<div class="modal-overlay" id="aiModal">
+    <div class="modal" style="max-width:560px">
+        <button class="modal-close" onclick="closeAIModal()"><i class="fas fa-times"></i></button>
+        <h2><i class="fas fa-robot" style="margin-right:0.5rem"></i>AI Club Advisor</h2>
+        <p style="color:var(--muted);margin-bottom:1.25rem;font-size:0.9rem">
+            Tell me about your hobbies, interests, and goals — I'll find the best clubs for you.
+        </p>
+        <div class="form-group">
+            <label>Your interests</label>
+            <textarea class="form-control" id="aiInterests" rows="4"
+                      placeholder="e.g. I love dancing, K-pop style. I also enjoy finance..."></textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="doAIRecommend()" id="aiBtnSubmit">
+            <i class="fas fa-search"></i> Find Clubs
+        </button>
+        <div id="aiResults" style="margin-top:1.5rem"></div>
+    </div>
+</div>
 <script src="/js/api.js"></script>
 <script src="/js/theme.js"></script>
 <script src="/js/app.js"></script>
+
 </body>
 </html>

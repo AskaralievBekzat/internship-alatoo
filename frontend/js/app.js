@@ -395,6 +395,61 @@ async function changePassword() {
 document.getElementById('authModal')?.addEventListener('click', function(e) { if (e.target === this) closeAuthModal(); });
 document.getElementById('applyModal')?.addEventListener('click', function(e) { if (e.target === this) closeApplyModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAuthModal(); closeApplyModal(); } });
+// ==============================================================
+//  AI CLUB FINDER
+// ==============================================================
 
+function openAIModal() { document.getElementById('aiModal').classList.add('open'); }
+function closeAIModal() {
+    document.getElementById('aiModal').classList.remove('open');
+    document.getElementById('aiResults').innerHTML = '';
+    document.getElementById('aiInterests').value = '';
+}
+
+async function doAIRecommend() {
+    const interests = document.getElementById('aiInterests').value.trim();
+    if (!interests) { toast('Tell me about your interests first!', 'error'); return; }
+
+    const btn = document.getElementById('aiBtnSubmit');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Thinking...';
+
+    const resultsEl = document.getElementById('aiResults');
+    resultsEl.innerHTML = '<div class="spinner"></div>';
+
+    try {
+        const data = await http('POST', '/clubs/ai/recommend', { interests });
+        const recs = data.recommendations;
+
+        if (!recs || !recs.length) {
+            resultsEl.innerHTML = '<p style="color:var(--muted)">No recommendations found. Try different interests.</p>';
+            return;
+        }
+
+        const medals = ['🥇', '🥈', '🥉'];
+        resultsEl.innerHTML = '<h3 style="margin-bottom:1rem;color:var(--primary-color)">Top clubs for you:</h3>' +
+            recs.map((r, i) => `
+                <div class="app-card" onclick="closeAIModal();openClub(${r.id})" style="cursor:pointer;gap:0.75rem">
+                    <img class="app-card-img" src="${r.image_url || ''}"
+                         onerror="this.style.background='linear-gradient(135deg,#B22234,#C8A165)';this.src=''">
+                    <div class="app-card-info">
+                        <h4>${medals[i]} ${escapeHtml(r.name)}</h4>
+                        <span style="color:var(--muted)">${escapeHtml(r.reason)}</span>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:var(--muted);flex-shrink:0"></i>
+                </div>`
+            ).join('');
+    } catch (e) {
+        resultsEl.innerHTML = `<p style="color:#c0392b"><i class="fas fa-exclamation-circle"></i> ${e.message}</p>`;
+        toast(e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search"></i> Find Clubs';
+    }
+}
+
+document.getElementById('aiModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeAIModal();
+});
 updateNav();
 loadClubs();
