@@ -103,8 +103,10 @@ Respond ONLY with valid JSON in this exact format, no extra text:
   {"id": 3, "name": "Club Name", "reason": "Short reason why this club fits"}
 ]`;
 
-        try {
-            const GROQ_KEY = process.env.GROQ_API_KEY;
+        try {// DEBUG — посмотрим что реально приходит
+            console.log('RAW GROQ_KEY:', JSON.stringify(process.env.GROQ_API_KEY));
+            console.log('Type:', typeof process.env.GROQ_API_KEY);
+            console.log('Length:', process.env.GROQ_API_KEY?.length);const GROQ_KEY = process.env.GROQ_API_KEY;
             console.log('=== GROQ DEBUG ===');
             console.log('KEY exists:', !!GROQ_KEY);
             console.log('KEY value:', GROQ_KEY ? GROQ_KEY.slice(0, 8) + '...' : 'UNDEFINED');
