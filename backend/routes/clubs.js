@@ -40,7 +40,7 @@ router.get('/announcements/:clubId', (req, res) => {
 router.get('/announcements/all', (req, res) => {
     db.all(
         `SELECT a.*, c.name as club_name FROM announcements a
-         JOIN clubs c ON a.club_id = c.id
+                                                  JOIN clubs c ON a.club_id = c.id
          ORDER BY a.created_at DESC`,
         [],
         (err, rows) => {
@@ -78,12 +78,11 @@ router.delete('/announcements/:id', authMiddleware, adminMiddleware, (req, res) 
     );
 });
 
-// POST /api/clubs/ai/recommend — AI подбор клуба по интересам
+// POST /api/clubs/ai/recommend — AI подбор клуба по интересам (Groq)
 router.post('/ai/recommend', authMiddleware, async (req, res) => {
     const { interests } = req.body;
     if (!interests) return res.status(400).json({ error: 'Interests required' });
 
-    // Получаем список клубов из БД
     db.all('SELECT id, name, description FROM clubs', async (err, clubs) => {
         if (err) return res.status(500).json({ error: 'Server error' });
 
@@ -105,38 +104,46 @@ Respond ONLY with valid JSON in this exact format, no extra text:
 ]`;
 
         try {
-            const GEMINI_KEY = process.env.GEMINI_API_KEY || 'ВСТАВЬ_СВОЙ_КЛЮЧ_СЮДА';
+            const GROQ_KEY = process.env.GROQ_API_KEY;
+            if (!GROQ_KEY) return res.status(500).json({ error: 'GROQ_API_KEY not set in .env' });
+
             const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+                'https://api.groq.com/openai/v1/chat/completions',
                 {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + GROQ_KEY
+                    },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+                        model: 'llama-3.3-70b-versatile',
+                        messages: [{ role: 'user', content: prompt }],
+                        temperature: 0.7,
+                        max_tokens: 500
                     })
                 }
             );
+
             const data = await response.json();
 
             if (!response.ok) {
-                console.error('Gemini error:', data);
-                return res.status(500).json({ error: data.error?.message || 'Gemini API error' });
+                console.error('Groq error:', data);
+                return res.status(500).json({ error: data.error?.message || 'Groq API error' });
             }
 
-            // Парсим ответ
-            let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-            // Убираем markdown-блоки если есть
+            let text = data.choices?.[0]?.message?.content || '[]';
             text = text.replace(/```json|```/g, '').trim();
+
             const recommendations = JSON.parse(text);
 
-            // Добавляем image_url к каждому клубу
+            // Добавляем image_url к каждому результату
             const enriched = recommendations.map(rec => {
                 const club = clubs.find(c => c.id === rec.id);
                 return { ...rec, image_url: club?.image_url || '' };
             });
 
             res.json({ recommendations: enriched });
+
         } catch (e) {
             console.error('AI error:', e);
             res.status(500).json({ error: 'AI service error: ' + e.message });
