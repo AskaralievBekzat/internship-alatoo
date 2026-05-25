@@ -47,13 +47,14 @@
                 <input type="text" class="search-bar" id="searchBar" placeholder="Search clubs...">
                 <i class="fas fa-search search-icon"></i>
             </div>
+            <div style="text-align:center;padding:1rem 0 0;position:relative;z-index:2">
+                <button class="btn btn-primary" onclick="openAIModal()" style="font-size:1rem;padding:0.75rem 2rem">
+                    <i class="fas fa-magic"></i> Find My Perfect Club with AI
+                </button>
+            </div>
         </div>
     </div>
-    <div style="text-align:center;padding:1rem 0 0;position:relative;z-index:2">
-        <button class="btn btn-primary" onclick="openAIModal()" style="font-size:1rem;padding:0.75rem 2rem">
-            <i class="fas fa-magic"></i> Find My Perfect Club with AI
-        </button>
-    </div>
+
     <div class="club-grid" id="clubGrid">
         <div style="grid-column:1/-1;text-align:center;padding:3rem">
             <div class="spinner"></div>
@@ -228,7 +229,7 @@
         <div class="form-group">
             <label>Your interests</label>
             <textarea class="form-control" id="aiInterests" rows="4"
-                      placeholder="e.g. I love dancing, K-pop style. I also enjoy finance..."></textarea>
+                      placeholder="..."></textarea>
         </div>
         <button class="btn btn-primary" style="width:100%" onclick="doAIRecommend()" id="aiBtnSubmit">
             <i class="fas fa-search"></i> Find Clubs

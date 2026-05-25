@@ -430,7 +430,7 @@ async function doAIRecommend() {
         resultsEl.innerHTML = '<h3 style="margin-bottom:1rem;color:var(--primary-color)">Top clubs for you:</h3>' +
             recs.map((r, i) => `
                 <div class="app-card" onclick="closeAIModal();openClub(${r.id})" style="cursor:pointer;gap:0.75rem">
-                    <img class="app-card-img" src="${r.image_url || ''}"
+                    <img class="app-card-img" src="images/ALA-TOO_logo.jpg"
                          onerror="this.style.background='linear-gradient(135deg,#B22234,#C8A165)';this.src=''">
                     <div class="app-card-info">
                         <h4>${medals[i]} ${escapeHtml(r.name)}</h4>
