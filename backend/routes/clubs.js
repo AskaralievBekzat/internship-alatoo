@@ -106,13 +106,25 @@ router.post('/ai/recommend', authMiddleware, async (req, res) => {
             }
 
             // Формируем промпт для AI
-            const prompt = `Recommend 3 clubs from this list for someone interested in: ${interests}
+            const prompt = `You are a university club advisor. A student wrote about their interests: "${interests}"
 
-Clubs:
-${clubs.map(c => `- ${c.name}: ${c.description}`).join('\n')}
+Here are the available university clubs:
+${clubList}
 
-For each club, provide a short reason why it matches (20 words max).
-Return ONLY JSON format: [{"id": 1, "reason": "..."}, {"id": 2, "reason": "..."}, {"id": 3, "reason": "..."}]`;
+Your task: analyze the student's interests and recommend exactly 3 clubs that best match.
+The order MUST reflect how well each club matches the specific interests described.
+If the student mentions reading/books - Book Club should be #1.
+If the student mentions music/instruments - Music Club should be #1.
+If the student mentions dancing/kpop - Dance Club should be #1.
+If the student mentions finance/investing/economics - Financial Club should be #1.
+If the student mentions politics/diplomacy/international - IR Club should be #1.
+
+Respond ONLY with valid JSON, no extra text:
+[
+  {"id": 1, "name": "Club Name", "reason": "Specific reason based on what student wrote"},
+  {"id": 2, "name": "Club Name", "reason": "Specific reason based on what student wrote"},
+  {"id": 3, "name": "Club Name", "reason": "Specific reason based on what student wrote"}
+]`;
 
             const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
