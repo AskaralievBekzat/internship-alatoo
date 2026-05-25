@@ -105,6 +105,10 @@ Respond ONLY with valid JSON in this exact format, no extra text:
 
         try {
             const GROQ_KEY = process.env.GROQ_API_KEY;
+            console.log('=== GROQ DEBUG ===');
+            console.log('KEY exists:', !!GROQ_KEY);
+            console.log('KEY value:', GROQ_KEY ? GROQ_KEY.slice(0, 8) + '...' : 'UNDEFINED');
+            console.log('All env keys:', Object.keys(process.env).filter(k => k.includes('GROQ')));
             if (!GROQ_KEY) return res.status(500).json({ error: 'GROQ_API_KEY not set in .env' });
 
             const response = await fetch(
