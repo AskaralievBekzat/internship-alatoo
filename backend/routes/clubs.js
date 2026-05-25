@@ -78,75 +78,79 @@ router.delete('/announcements/:id', authMiddleware, adminMiddleware, (req, res) 
     );
 });
 
-// POST /api/clubs/ai/recommend — AI подбор клуба по интересам (Groq)
+// POST /api/clubs/ai/recommend — AI рекомендации
 router.post('/ai/recommend', authMiddleware, async (req, res) => {
     const { interests } = req.body;
-    if (!interests) return res.status(400).json({ error: 'Interests required' });
 
-    db.all('SELECT id, name, description FROM clubs', async (err, clubs) => {
-        if (err) return res.status(500).json({ error: 'Server error' });
+    if (!interests) {
+        return res.status(400).json({ error: 'Please provide your interests' });
+    }
 
-        const clubList = clubs.map(c =>
-            `- ID: ${c.id}, Name: "${c.name}", Description: "${c.description}"`
-        ).join('\n');
+    const { db } = require('../database');
+    db.all('SELECT id, name, description, image_url FROM clubs', [], async (err, clubs) => {
+        if (err) {
+            return res.status(500).json({ error: 'Database error' });
+        }
 
-        const prompt = `You are a university club advisor. A student described their interests: "${interests}"
-
-Here are the available clubs:
-${clubList}
-
-Based on the student's interests, recommend the TOP 3 most suitable clubs.
-Respond ONLY with valid JSON in this exact format, no extra text:
-[
-  {"id": 1, "name": "Club Name", "reason": "Short reason why this club fits"},
-  {"id": 2, "name": "Club Name", "reason": "Short reason why this club fits"},
-  {"id": 3, "name": "Club Name", "reason": "Short reason why this club fits"}
-]`;
+        // Fallback: первые 3 клуба, если AI не сработает
+        const fallbackRecommendations = clubs.slice(0, 3).map(c => ({
+            ...c,
+            reason: 'Popular club'
+        }));
 
         try {
-            const GROQ_KEY = process.env.GROQ_API_KEY;
-            if (!GROQ_KEY) return res.status(500).json({ error: 'GROQ_API_KEY not set in .env' });
+            const apiKey = process.env.GROQ_API_KEY;
+            if (!apiKey) {
+                console.warn('⚠️ GROQ_API_KEY not set, using fallback');
+                return res.json({ recommendations: fallbackRecommendations, fallback: true });
+            }
 
-            const response = await fetch(
-                'https://api.groq.com/openai/v1/chat/completions',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + GROQ_KEY
-                    },
-                    body: JSON.stringify({
-                        model: 'llama-3.3-70b-versatile',
-                        messages: [{ role: 'user', content: prompt }],
-                        temperature: 0.7,
-                        max_tokens: 500
-                    })
-                }
-            );
+            // Формируем промпт для AI
+            const prompt = `Recommend 3 clubs from this list for someone interested in: ${interests}
+
+Clubs:
+${clubs.map(c => `- ${c.name}: ${c.description}`).join('\n')}
+
+For each club, provide a short reason why it matches (20 words max).
+Return ONLY JSON format: [{"id": 1, "reason": "..."}, {"id": 2, "reason": "..."}, {"id": 3, "reason": "..."}]`;
+
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'mixtral-8x7b-32768',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.3
+                })
+            });
 
             const data = await response.json();
 
             if (!response.ok) {
-                console.error('Groq error:', data);
-                return res.status(500).json({ error: data.error?.message || 'Groq API error' });
+                throw new Error(data.error?.message || 'API error');
             }
 
-            let text = data.choices?.[0]?.message?.content || '[]';
-            text = text.replace(/```json|```/g, '').trim();
+            const content = data.choices?.[0]?.message?.content || '';
+            const jsonMatch = content.match(/\[[\s\S]*\]/);
+            if (!jsonMatch) {
+                throw new Error('No valid JSON found');
+            }
 
-            const recommendations = JSON.parse(text);
+            const recommendationsData = JSON.parse(jsonMatch[0]);
+            const recommendations = clubs.filter(c => recommendationsData.some(rec => rec.id === c.id))
+                .map(c => ({
+                    ...c,
+                    reason: recommendationsData.find(rec => rec.id === c.id)?.reason || 'Great match'
+                }));
 
-            // Добавляем image_url к каждому результату
-            const enriched = recommendations.map(rec => {
-                const club = clubs.find(c => c.id === rec.id);
-                return { ...rec, image_url: club?.image_url || '' };
-            });
+            res.json({ recommendations });
 
-            res.json({ recommendations: enriched });
-
-        } catch (e) {
-            console.error('AI error:', e);
-            res.status(500).json({ error: 'AI service error: ' + e.message });
+        } catch (error) {
+            console.error('AI Error:', error.message);
+            res.json({ recommendations: fallbackRecommendations, fallback: true });
         }
     });
 });
