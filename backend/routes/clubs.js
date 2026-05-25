@@ -78,91 +78,68 @@ router.delete('/announcements/:id', authMiddleware, adminMiddleware, (req, res) 
     );
 });
 
-// POST /api/clubs/ai/recommend — AI рекомендации
+// POST /api/clubs/ai/recommend — AI подбор клуба по интересам
 router.post('/ai/recommend', authMiddleware, async (req, res) => {
     const { interests } = req.body;
+    if (!interests) return res.status(400).json({ error: 'Interests required' });
 
-    if (!interests) {
-        return res.status(400).json({ error: 'Please provide your interests' });
-    }
+    // Получаем список клубов из БД
+    db.all('SELECT id, name, description FROM clubs', async (err, clubs) => {
+        if (err) return res.status(500).json({ error: 'Server error' });
 
-    const { db } = require('../database');
-    db.all('SELECT id, name, description, image_url FROM clubs', [], async (err, clubs) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database error' });
-        }
+        const clubList = clubs.map(c =>
+            `- ID: ${c.id}, Name: "${c.name}", Description: "${c.description}"`
+        ).join('\n');
 
-        // Fallback: первые 3 клуба, если AI не сработает
-        const fallbackRecommendations = clubs.slice(0, 3).map(c => ({
-            ...c,
-            reason: 'Popular club'
-        }));
+        const prompt = `You are a university club advisor. A student described their interests: "${interests}"
 
-        try {
-            const apiKey = process.env.GROQ_API_KEY;
-            if (!apiKey) {
-                console.warn('⚠️ GROQ_API_KEY not set, using fallback');
-                return res.json({ recommendations: fallbackRecommendations, fallback: true });
-            }
-
-            // Формируем промпт для AI
-            const prompt = `You are a university club advisor. A student wrote about their interests: "${interests}"
-
-Here are the available university clubs:
+Here are the available clubs:
 ${clubList}
 
-Your task: analyze the student's interests and recommend exactly 3 clubs that best match.
-The order MUST reflect how well each club matches the specific interests described.
-If the student mentions reading/books - Book Club should be #1.
-If the student mentions music/instruments - Music Club should be #1.
-If the student mentions dancing/kpop - Dance Club should be #1.
-If the student mentions finance/investing/economics - Financial Club should be #1.
-If the student mentions politics/diplomacy/international - IR Club should be #1.
-
-Respond ONLY with valid JSON, no extra text:
+Based on the student's interests, recommend the TOP 3 most suitable clubs.
+Respond ONLY with valid JSON in this exact format, no extra text:
 [
-  {"id": 1, "name": "Club Name", "reason": "Specific reason based on what student wrote"},
-  {"id": 2, "name": "Club Name", "reason": "Specific reason based on what student wrote"},
-  {"id": 3, "name": "Club Name", "reason": "Specific reason based on what student wrote"}
+  {"id": 1, "name": "Club Name", "reason": "Short reason why this club fits"},
+  {"id": 2, "name": "Club Name", "reason": "Short reason why this club fits"},
+  {"id": 3, "name": "Club Name", "reason": "Short reason why this club fits"}
 ]`;
 
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: 'mixtral-8x7b-32768',
-                    messages: [{ role: 'user', content: prompt }],
-                    temperature: 0.3
-                })
-            });
-
+        try {
+            const GEMINI_KEY = process.env.GEMINI_API_KEY || 'ВСТАВЬ_СВОЙ_КЛЮЧ_СЮДА';
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+                    })
+                }
+            );
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error?.message || 'API error');
+                console.error('Gemini error:', data);
+                return res.status(500).json({ error: data.error?.message || 'Gemini API error' });
             }
 
-            const content = data.choices?.[0]?.message?.content || '';
-            const jsonMatch = content.match(/\[[\s\S]*\]/);
-            if (!jsonMatch) {
-                throw new Error('No valid JSON found');
-            }
+            // Парсим ответ
+            let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+            // Убираем markdown-блоки если есть
+            text = text.replace(/```json|```/g, '').trim();
+            const recommendations = JSON.parse(text);
 
-            const recommendationsData = JSON.parse(jsonMatch[0]);
-            const recommendations = clubs.filter(c => recommendationsData.some(rec => rec.id === c.id))
-                .map(c => ({
-                    ...c,
-                    reason: recommendationsData.find(rec => rec.id === c.id)?.reason || 'Great match'
-                }));
+            // Добавляем image_url к каждому клубу
+            const enriched = recommendations.map(rec => {
+                const club = clubs.find(c => c.id === rec.id);
+                return { ...rec, image_url: club?.image_url || '' };
+            });
 
-            res.json({ recommendations });
-
-        } catch (error) {
-            console.error('AI Error:', error.message);
-            res.json({ recommendations: fallbackRecommendations, fallback: true });
+            res.json({ recommendations: enriched });
+        } catch (e) {
+            console.error('AI error:', e);
+            res.status(500).json({ error: 'AI service error: ' + e.message });
         }
     });
 });
